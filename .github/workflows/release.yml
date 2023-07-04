@@ -32,4 +32,4 @@ jobs:
             docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
             echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:latest"
 
-            aws ecs update-service --region us-east-2 --cluster next-example-cluster --service next-example-service --force-new-deployment > dev/null
+            aws ecs update-service --region us-east-2 --cluster next-example-cluster --service next-example-service --force-new-deployment > /dev/null
