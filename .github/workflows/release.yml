@@ -1,0 +1,35 @@
+name: Deploy to ECS
+on:
+  push:
+    branches:
+      - main
+jobs:
+  build:
+      name: Deploy to ECS
+      runs-on: ubuntu-latest
+      steps:
+        - name: Checkout
+          uses: actions/checkout@v3
+
+        - name: Configure AWS credentials
+          uses: aws-actions/configure-aws-credentials@v2
+          with:
+            aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+            aws-secrets-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+            aws-region: us-east-2
+        
+        - name: Login to Amazon ECR
+          id: login-ecr
+          uses: aws-actions/amazon-ecr-login@v1
+
+        - name: Build, tag and push image
+          id: build-image
+          env:
+            ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+            ECR_REPOSITORY: next-example
+          run: |
+            docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:latest --no-cache .
+            docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+            echo "::set-output name.image::$ECR_REGISTRY/$ECR_REPOSITORY:latest"
+
+            aws ecs update-service --region us-east-2 --cluster next-example-cluster --service next-example-service --force-new-deployment > dev/null
